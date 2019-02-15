@@ -2,10 +2,8 @@ package com.example.adsonafonso.circularwaveanimation
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.graphics.*
 import android.graphics.Paint.ANTI_ALIAS_FLAG
-import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
@@ -28,6 +26,19 @@ class RippleViews @JvmOverloads constructor(
             postInvalidateOnAnimation()
         }
 
+    private val gradientPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        // Highlight only the areas already touched on the canvas
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+    }
+    // gradient colors
+    private val green = Color.GREEN
+    // solid green in the center, transparent green at the edges
+    private val gradientColors =
+        intArrayOf(green, modifyAlpha(green, 0.80f),
+            modifyAlpha(green, 0.05f))
+    private val gradientMatrix = Matrix()
+
+
 
     init {
         val attrs = context.obtainStyledAttributes(attrs,R.styleable.RipplesView, defStyleAttr,0)
@@ -47,6 +58,11 @@ class RippleViews @JvmOverloads constructor(
         center.set(w / 2f, h / 2f)
         maxRadius = Math.hypot(center.x.toDouble(), center.y.toDouble()).toFloat()
         initialRadius = w / rippleGap
+        //Create gradient after getting sizing information
+        gradientPaint.shader = RadialGradient(
+            center.x, center.y, w / 2f,
+            gradientColors, null, Shader.TileMode.CLAMP
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -58,6 +74,8 @@ class RippleViews @JvmOverloads constructor(
             canvas.drawCircle(center.x, center.y, currentRadius, ripplePaint)
             currentRadius += rippleGap
         }
+
+        canvas.drawPaint(gradientPaint)
     }
 
     override fun onAttachedToWindow() {
@@ -78,5 +96,10 @@ class RippleViews @JvmOverloads constructor(
         rippleAnimator?.cancel()
         super.onDetachedFromWindow()
     }
+
+    private fun modifyAlpha(color: Int, alpha: Float): Int {
+        return color and 0x00ffffff or ((alpha * 255).toInt() shl 24)
+    }
+
 
 }

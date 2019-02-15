@@ -10,6 +10,7 @@
     <com.example.adsonafonso.circularwaveanimation.RippleViews
             style="@style/Widget.rippleView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layerType="software"/>
 
 </android.support.constraint.ConstraintLayout>
