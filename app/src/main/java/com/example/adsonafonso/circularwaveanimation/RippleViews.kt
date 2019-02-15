@@ -1,5 +1,6 @@
 package com.example.adsonafonso.circularwaveanimation
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -7,19 +8,26 @@ import android.graphics.Paint.ANTI_ALIAS_FLAG
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.LinearInterpolator
 
 class RippleViews @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-
     private val ripplePaint: Paint
     private val rippleGap: Float
-
 
     private var maxRadius = 0f
     private var center = PointF(0f, 0f)
     private var initialRadius = 0f
+
+    private var rippleAnimator: ValueAnimator? = null
+    private var rippleRadiusOffset = 0f
+        set(value) {
+            field = value
+            postInvalidateOnAnimation()
+        }
+
 
     init {
         val attrs = context.obtainStyledAttributes(attrs,R.styleable.RipplesView, defStyleAttr,0)
@@ -45,13 +53,30 @@ class RippleViews @JvmOverloads constructor(
         super.onDraw(canvas)
 
         //draw circles separated by a space the size of rippleGap
-        var currentRadius = initialRadius
+        var currentRadius = initialRadius + rippleRadiusOffset
         while (currentRadius < maxRadius) {
             canvas.drawCircle(center.x, center.y, currentRadius, ripplePaint)
             currentRadius += rippleGap
         }
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        rippleAnimator = ValueAnimator.ofFloat(0f, rippleGap).apply {
+            addUpdateListener {
+                rippleRadiusOffset = it.animatedValue as Float
+            }
+            duration = 1500L
+            repeatMode = ValueAnimator.RESTART
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            start()
+        }
+    }
 
+    override fun onDetachedFromWindow() {
+        rippleAnimator?.cancel()
+        super.onDetachedFromWindow()
+    }
 
 }
