@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+    <attr name="rippleViewStyle" format="reference" />
+
+    <declare-styleable name="RipplesView">
+        <attr name="rippleColor" format="color" />
+        <attr name="rippleStrokeWidth" format="dimension" />
+        <attr name="rippleGap" format="dimension" />
+    </declare-styleable>
+
+</resources>
