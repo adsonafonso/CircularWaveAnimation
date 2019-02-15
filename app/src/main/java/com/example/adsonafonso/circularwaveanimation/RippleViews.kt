@@ -10,7 +10,7 @@ import android.view.animation.LinearInterpolator
 
 class RippleViews @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr), TiltListener {
 
     private val ripplePaint: Paint
     private val rippleGap: Float
@@ -37,7 +37,7 @@ class RippleViews @JvmOverloads constructor(
         intArrayOf(green, modifyAlpha(green, 0.80f),
             modifyAlpha(green, 0.05f))
     private val gradientMatrix = Matrix()
-
+    val tiltSensor = RippleTiltSensor(context)
 
 
     init {
@@ -65,6 +65,26 @@ class RippleViews @JvmOverloads constructor(
         )
     }
 
+    override fun onTilt(pitchRollRad: Pair<Double, Double>) {
+        val pitchRad = pitchRollRad.first
+        val rollRad = pitchRollRad.second
+
+        // Use half view height/width to calculate offset instead of full view/device measurement
+        val maxYOffset = center.y.toDouble()
+        val maxXOffset = center.x.toDouble()
+
+        val yOffset = (Math.sin(pitchRad) * maxYOffset)
+        val xOffset = (Math.sin(rollRad) * maxXOffset)
+
+        updateGradient(xOffset.toFloat() + center.x, yOffset.toFloat() + center.y)
+    }
+
+    private fun updateGradient(x: Float, y: Float) {
+        gradientMatrix.setTranslate(x - center.x, y - center.y)
+        gradientPaint.shader.setLocalMatrix(gradientMatrix)
+        postInvalidateOnAnimation()
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
@@ -90,10 +110,13 @@ class RippleViews @JvmOverloads constructor(
             interpolator = LinearInterpolator()
             start()
         }
+        tiltSensor.addListener(this)
+        tiltSensor.register()
     }
 
     override fun onDetachedFromWindow() {
         rippleAnimator?.cancel()
+        tiltSensor.unregister()
         super.onDetachedFromWindow()
     }
 
